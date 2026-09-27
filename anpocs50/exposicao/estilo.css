@@ -412,3 +412,31 @@ html.contraste .logos img { background: #fff; padding: .2rem; border-radius: 6px
 }
 .aviso-caixa h2 { margin-top: 0; font-family: var(--fonte-titulos); font-weight: 600; color: var(--cor-principal); font-size: 1.8rem; }
 .aviso-caixa p { font-size: 1.2rem; }
+
+/* ---------- telas baixas (celular deitado): a página rola em vez de espremer ---------- */
+
+@media (max-height: 560px) {
+  html { font-size: 14px; }
+  html.letra-grande { font-size: 18px; }
+
+  .inicio {
+    height: auto;
+    min-height: 100svh;
+    grid-template-rows: auto auto;
+    align-items: start;
+    overflow: visible;
+    padding: 1rem 1.5rem;
+  }
+  .inicio-cartaz { height: auto; align-self: start; }
+  .inicio-cartaz img { max-height: calc(100svh - 2rem); }
+  .inicio-titulo { font-size: 2.2rem; }
+  .botao-grande { min-height: 3.8rem; font-size: 1.15rem; }
+
+  .barra { height: 4.2rem; }
+
+  .pagina-video { width: min(100%, calc((100svh - 5.5rem) * 16 / 9)); }
+
+  .noticia { grid-template-columns: 1fr; }
+  .paginas, .paginas img { max-height: none; }
+  .paginas img { width: 100% !important; }
+}

@@ -455,15 +455,27 @@ async function criarPlayer(id) {
   if (!document.getElementById("player-youtube")) return; // saiu da tela antes de carregar
   player = new YT.Player("player-youtube", {
     videoId: id,
-    playerVars: { rel: 0, playsinline: 1, hl: "pt-BR" },
+    playerVars: { rel: 0, playsinline: 1, hl: "pt-BR", cc_load_policy: 0 },
     events: {
+      // os vídeos já têm legenda no próprio vídeo: desliga a legenda automática do YouTube
+      onReady: (e) => desligarLegendaYoutube(e.target),
+      onApiChange: (e) => desligarLegendaYoutube(e.target),
       onStateChange: (e) => {
+        if (e.data === YT.PlayerState.PLAYING) desligarLegendaYoutube(e.target);
         videoTocando = e.data === YT.PlayerState.PLAYING || e.data === YT.PlayerState.BUFFERING;
         if (videoTocando) pararVoz();
         registrarAtividade();
       }
     }
   });
+}
+
+function desligarLegendaYoutube(p) {
+  try {
+    p.setOption("captions", "track", {});
+    p.unloadModule("captions");
+    p.unloadModule("cc");
+  } catch (e) {}
 }
 
 function destruirPlayer() {
