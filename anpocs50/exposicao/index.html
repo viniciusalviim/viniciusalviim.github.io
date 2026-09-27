@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ANPOCS: 50 anos de Encontros</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=Source+Serif+4:wght@400;600&display=swap">
+  <link rel="stylesheet" href="estilo.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script data-goatcounter="https://viniciusalviim.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <main id="app" aria-live="polite">
+    <p class="carregando">Carregando…</p>
+  </main>
+
+  <div id="aviso" class="aviso" hidden role="alertdialog" aria-labelledby="aviso-titulo">
+    <div class="aviso-caixa">
+      <h2 id="aviso-titulo">Ainda está aí?</h2>
+      <p>A tela vai voltar ao início em <strong id="aviso-contagem">20</strong> segundos.</p>
+      <button class="botao botao-principal" id="aviso-continuar">Continuar aqui</button>
+    </div>
+  </div>
+</body>
+</html>
