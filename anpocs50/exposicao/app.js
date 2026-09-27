@@ -25,11 +25,11 @@ const estado = {
   acervo: "imprensa",  // qual seção de documentos está aberta
   telaAnterior: "inicio",
   item: null,
-  dados: { videos: [], imprensa: [], cartas: [], logos: [] },
+  dados: { videos: [], imprensa: [], cartas: [], logos: [], creditos: [] },
   contraste: false,
   letraGrande: false,
   voz: false,
-  ampliado: false,
+  zoom: 1,          // zoom da notícia/carta aberta (1 = normal)
   decada: "todas"   // filtro por década
 };
 
@@ -90,6 +90,9 @@ async function carregarPlanilha() {
       }));
   }
 
+  estado.dados.creditos = ordenar(aba("Creditos").filter((l) => texto(l.funcao) || texto(l.texto)))
+    .map((l) => ({ funcao: texto(l.funcao), texto: texto(l.texto) }));
+
   estado.dados.logos = ordenar(aba("Logos").filter((l) => texto(l.arquivo) || texto(l.nome)))
     .map((l) => ({ arquivo: texto(l.arquivo), nome: texto(l.nome) }));
 }
@@ -116,11 +119,12 @@ function pararVoz() {
 
 function ir(tela, item = null) {
   pararVoz();
+  fecharCreditos();
   destruirPlayer();
   estado.telaAnterior = estado.tela;
   estado.tela = tela;
   estado.item = item;
-  estado.ampliado = false;
+  estado.zoom = 1;
   desenhar();
   window.scrollTo(0, 0);
 }
@@ -159,6 +163,7 @@ function telaInicio() {
 
   return `
     <section class="inicio">
+      ${estado.dados.creditos.length ? `<button class="botao-creditos" data-acao="creditos" aria-label="Créditos" data-falar="Créditos">?</button>` : ""}
       <div class="inicio-cartaz">
         <img src="${esc(CONFIG.cartaz)}" alt="Cartaz do 50º Encontro Anual da ANPOCS" data-reserva="Cartaz 2026">
       </div>
@@ -282,11 +287,12 @@ function telaDocumento() {
         <div class="sub">${esc([n.fonte, dataLegivel(n.data)].filter(Boolean).join(" · "))}</div>
         ${n.descricao ? `<p>${esc(n.descricao)}</p>` : ""}
         <div class="legenda-acoes">
-          ${paginas ? `<button class="botao botao-principal" data-acao="ampliar">${estado.ampliado ? "− Diminuir" : "+ Ampliar"}</button>` : ""}
+          ${paginas ? `<button class="botao botao-principal" data-acao="ampliar">+ Ampliar</button>` : ""}
           ${n.descricao ? `<button class="botao" data-acao="ouvir">Ouvir a descrição</button>` : ""}
         </div>
+        ${paginas ? `<p class="dica-zoom">Para aproximar a imagem: movimento de pinça com dois dedos ou Ctrl + rolagem do mouse.</p>` : ""}
       </div>
-      ${paginas ? `<div class="paginas ${estado.ampliado ? "ampliado" : ""}">${paginas}</div>` : ""}
+      ${paginas ? `<div class="paginas">${paginas}</div>` : ""}
     </div>`;
 }
 
@@ -334,13 +340,118 @@ function desenhar() {
   app.querySelectorAll(".paginas img").forEach((img) => {
     const ajustar = () => {
       const proporcao = img.naturalWidth / img.naturalHeight;
-      img.style.width = `min(100%, calc((100svh - 8.6rem - 4px) * ${proporcao}))`;
+      img.dataset.base = telaBaixa()
+        ? "100%"
+        : `min(100%, calc((100svh - 8.6rem - 4px) * ${proporcao}))`;
+      img.style.width = `calc(${img.dataset.base} * ${estado.zoom})`;
     };
     if (img.complete && img.naturalWidth) ajustar(); else img.addEventListener("load", ajustar, { once: true });
   });
+  const paginas = app.querySelector(".paginas");
+  if (paginas) ativarZoom(paginas);
 
   if (estado.tela === "video" && estado.item.youtube) criarPlayer(estado.item.youtube);
 }
+
+/* ---------- zoom nas notícias e cartas ---------- */
+// Só a área da imagem aproxima: pinça no tablet, pinça no touchpad ou Ctrl + rolagem do mouse.
+// Ao sair da notícia (ou na volta automática ao início) o zoom volta a 1.
+
+const ZOOM_MAX = 5;
+const telaBaixa = () => window.matchMedia("(max-height: 560px)").matches;
+
+function aplicarZoom(novo, fx, fy) {
+  const c = app.querySelector(".paginas");
+  if (!c) return;
+  novo = Math.min(ZOOM_MAX, Math.max(1, novo));
+  const antigo = estado.zoom;
+  if (Math.abs(novo - antigo) < 0.001) return;
+  if (fx === undefined) { fx = c.clientWidth / 2; fy = c.clientHeight / 2; }
+  const sx = c.scrollLeft, sy = c.scrollTop;
+
+  estado.zoom = novo;
+  c.classList.toggle("ampliado", novo > 1);
+  c.querySelectorAll("img").forEach((img) => {
+    if (img.dataset.base) img.style.width = `calc(${img.dataset.base} * ${novo})`;
+  });
+
+  // mantém parado o ponto que está sob os dedos / o mouse
+  const r = novo / antigo;
+  c.scrollLeft = (sx + fx) * r - fx;
+  c.scrollTop = (sy + fy) * r - fy;
+
+  const botao = app.querySelector('[data-acao="ampliar"]');
+  if (botao) botao.textContent = novo > 1 ? "− Tamanho normal" : "+ Ampliar";
+}
+
+function ativarZoom(c) {
+  const posicao = (x, y) => { const r = c.getBoundingClientRect(); return [x - r.left, y - r.top]; };
+
+  // pinça com dois dedos
+  let pinca = null;
+  const distancia = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+  c.addEventListener("touchstart", (e) => {
+    if (e.touches.length === 2) {
+      pinca = { d: distancia(e.touches), z: estado.zoom };
+      e.preventDefault();
+    }
+  }, { passive: false });
+  c.addEventListener("touchmove", (e) => {
+    if (!pinca || e.touches.length !== 2) return;
+    e.preventDefault();
+    const [fx, fy] = posicao(
+      (e.touches[0].clientX + e.touches[1].clientX) / 2,
+      (e.touches[0].clientY + e.touches[1].clientY) / 2);
+    aplicarZoom(pinca.z * distancia(e.touches) / pinca.d, fx, fy);
+  }, { passive: false });
+  c.addEventListener("touchend", (e) => { if (e.touches.length < 2) pinca = null; });
+
+  // Ctrl + rolagem do mouse (a pinça do touchpad chega assim também)
+  c.addEventListener("wheel", (e) => {
+    if (!e.ctrlKey) return;
+    e.preventDefault();
+    const passo = Math.max(-60, Math.min(60, e.deltaY));
+    const [fx, fy] = posicao(e.clientX, e.clientY);
+    aplicarZoom(estado.zoom * Math.exp(-passo * 0.004), fx, fy);
+  }, { passive: false });
+
+  // com o mouse: clicar e arrastar move a imagem ampliada
+  let arraste = null;
+  c.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "mouse" || estado.zoom <= 1) return;
+    arraste = { x: e.clientX, y: e.clientY, sl: c.scrollLeft, st: c.scrollTop };
+    c.classList.add("arrastando");
+    e.preventDefault();
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!arraste) return;
+    c.scrollLeft = arraste.sl - (e.clientX - arraste.x);
+    c.scrollTop = arraste.st - (e.clientY - arraste.y);
+  });
+  window.addEventListener("pointerup", () => { arraste = null; c.classList.remove("arrastando"); });
+}
+
+/* ---------- créditos (botão ? da tela inicial) ---------- */
+
+const janelaCreditos = document.getElementById("creditos");
+
+function abrirCreditos() {
+  janelaCreditos.querySelector(".creditos-lista").innerHTML = estado.dados.creditos.map((c) => `
+    <div class="credito">
+      ${c.funcao ? `<div class="credito-funcao">${esc(c.funcao)}</div>` : ""}
+      ${c.texto ? `<div class="credito-texto">${esc(c.texto)}</div>` : ""}
+    </div>`).join("");
+  janelaCreditos.hidden = false;
+  falar(estado.dados.creditos.map((c) => c.funcao + ". " + c.texto).join(". "));
+}
+
+function fecharCreditos() {
+  if (janelaCreditos) janelaCreditos.hidden = true;
+}
+
+janelaCreditos.addEventListener("click", (e) => {
+  if (e.target === janelaCreditos || e.target.closest("[data-fechar]")) fecharCreditos();
+});
 
 /* ---------- métricas (GoatCounter) ---------- */
 
@@ -367,6 +478,7 @@ app.addEventListener("click", (evento) => {
 
   switch (acao) {
     case "voltar": voltar(); break;
+    case "creditos": abrirCreditos(); break;
     case "videos": registrar("exposicao/secao/videos"); ir("videos"); break;
     case "acervo":
       estado.acervo = alvo.dataset.acervo;
@@ -397,9 +509,7 @@ app.addEventListener("click", (evento) => {
       break;
     }
     case "ampliar":
-      estado.ampliado = !estado.ampliado;
-      app.querySelector(".paginas").classList.toggle("ampliado", estado.ampliado);
-      alvo.textContent = estado.ampliado ? "− Diminuir" : "+ Ampliar";
+      aplicarZoom(estado.zoom > 1 ? 1 : 2);
       break;
     case "ouvir":
       falar(estado.item.descricao, true);
@@ -501,7 +611,7 @@ document.addEventListener("scroll", registrarAtividade, { passive: true, capture
 document.getElementById("aviso-continuar").addEventListener("click", registrarAtividade);
 
 function telaJaEstaLimpa() {
-  return estado.tela === "inicio" && !estado.contraste && !estado.letraGrande && !estado.voz;
+  return estado.tela === "inicio" && !estado.contraste && !estado.letraGrande && !estado.voz && janelaCreditos.hidden;
 }
 
 function reiniciar() {

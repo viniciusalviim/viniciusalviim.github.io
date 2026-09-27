@@ -373,7 +373,11 @@ html.contraste .logos img { background: #fff; padding: .2rem; border-radius: 6px
   margin: 0 auto;
 }
 .paginas img + img { border-top: 2px solid #ccc; }
-.paginas.ampliado img { width: 200% !important; max-width: none; max-height: none; }
+.paginas { touch-action: pan-x pan-y; overscroll-behavior: contain; }
+.paginas.ampliado img { max-width: none; max-height: none; margin: 0; }
+.paginas.ampliado { cursor: grab; }
+.paginas.arrastando { cursor: grabbing; user-select: none; }
+.dica-zoom { margin: .9rem 0 0 !important; font-size: .9rem !important; color: var(--cor-texto-suave); }
 
 @media (orientation: portrait), (max-width: 760px) {
   .noticia { grid-template-columns: 1fr; }
@@ -438,5 +442,28 @@ html.contraste .logos img { background: #fff; padding: .2rem; border-radius: 6px
 
   .noticia { grid-template-columns: 1fr; }
   .paginas, .paginas img { max-height: none; }
-  .paginas img { width: 100% !important; }
 }
+
+/* ---------- créditos ---------- */
+
+.inicio { position: relative; }
+.botao-creditos {
+  position: absolute;
+  top: .8rem;
+  right: .8rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 2px solid var(--cor-borda);
+  background: var(--cor-cartao);
+  color: var(--cor-texto);
+  font-family: var(--fonte-titulos);
+  font-weight: 600;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.creditos-caixa { text-align: left; }
+.creditos-lista { margin-bottom: 1.4rem; }
+.credito + .credito { margin-top: 1rem; }
+.credito-funcao { color: var(--cor-destaque); font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.credito-texto { font-size: 1.1rem; word-break: break-word; }
