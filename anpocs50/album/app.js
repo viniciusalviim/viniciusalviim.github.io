@@ -389,7 +389,7 @@ function pacoteHtml(rasgando) {
       <div class="pack-fragment fragment-a"></div>
       <div class="pack-fragment fragment-b"></div>
       <div class="pack-fragment fragment-c"></div>
-      <div class="pack-body"><strong>ANPOCS</strong><span>${pacoteAtual.length} figurinhas</span></div>
+      <div class="pack-body"><span>${pacoteAtual.length} figurinhas</span></div>
     </div>`;
 }
 
