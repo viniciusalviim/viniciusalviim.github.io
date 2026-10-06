@@ -2,37 +2,16 @@
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ANPOCS 50 anos</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600&family=Source+Serif+4:wght@400;600&display=swap">
-  <style>
-    :root { --texto:#231f20; --suave:#55504f; --destaque:#f14b59; --fundo:#f4efe6; --cartao:#fffdf7; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--fundo); color:var(--texto); font-family:"Source Sans 3",system-ui,sans-serif; line-height:1.5; }
-    main { max-width:52rem; margin:0 auto; padding:3rem 1.25rem; }
-    .voltar { color:var(--suave); }
-    .selo { margin-top:2rem; color:var(--destaque); font-weight:600; letter-spacing:.14em; text-transform:uppercase; font-size:.85rem; }
-    h1 { font-family:"Source Serif 4",Georgia,serif; font-weight:600; font-size:clamp(2rem,6vw,3rem); margin:.3rem 0 1rem; line-height:1.1; }
-    p { color:var(--suave); font-size:1.1rem; }
-    .grade { display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:1.2rem; margin-top:2rem; }
-    a.cartao { display:block; padding:1.4rem; background:var(--cartao); border:2px solid var(--texto); border-radius:12px;
-               box-shadow:3px 3px 0 var(--texto); color:inherit; text-decoration:none; }
-    a.cartao strong { font-family:"Source Serif 4",Georgia,serif; font-size:1.35rem; }
-    a.cartao span { display:block; color:var(--suave); margin-top:.3rem; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Álbum ANPOCS 50 anos</title>
+  <link rel="stylesheet" href="estilo.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script data-goatcounter="https://viniciusalviim.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
-  <main>
-    <a class="voltar" href="../">← Vinicius Alvim</a>
-    <div class="selo">50º Encontro Anual · 2026</div>
-    <h1>ANPOCS: 50 anos de Encontros</h1>
-    <p>Materiais produzidos para a comemoração dos 50 anos da Associação Nacional de Pós-Graduação e Pesquisa em Ciências Sociais.</p>
-    <div class="grade">
-      <a class="cartao" href="exposicao/">
-        <strong>Exposição</strong>
-        <span>Depoimentos em vídeo, a ANPOCS na imprensa e cartas do acervo.</span>
-      </a>
-    </div>
-  </main>
+  <main id="app"><p class="carregando">Carregando o álbum…</p></main>
+  <div id="janela" class="janela" hidden></div>
+  <div id="toast" class="toast" hidden></div>
 </body>
 </html>
